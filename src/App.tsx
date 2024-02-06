@@ -11,12 +11,10 @@ function App() {
     <div className="App">
       <Transition />
       <hr />
-      <ErrorBoundary fallback={<p>エラーが発生しました</p>}>
-      {/* <ErrorBoundary> */}
+      <ErrorBoundary fallback={<p>全体エラーが発生しました</p>}>
         <Suspense fallback={<p>全体ローディング中だよ〜</p>}>
           <ReactQuery />  
         </Suspense>
-      {/* </ErrorBoundary> */}
       </ErrorBoundary>
     </div>
   );

@@ -1,31 +1,50 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { Suspense, useState, useTransition } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { Sidebar } from "./Sidebar";
+import { AlbumList } from "./AlbumList";
+import { TodoList } from "./TodoList";
 
-type Album = {
-  userId: number;
-  id: number;
-  title: string
-}
+type Tabs = 'todo' | 'album';
 
-// fetcher関数 データフェッチに関する記述をした関数
-const fetchAlubums = async () => {
-  const result = await axios.get<Album[]>('https://jsonplaceholder.typicode.com/albumsxx');
-  return result.data;
-}
+export const ReactQuery = () => {  
+  const [selectedTab, setSelectedTab] = useState<Tabs>('todo');
+  const [isPending, startTransition] = useTransition();
 
-export const ReactQuery = () => {
-  // useQueryの第一引数にはアプリで一意のキーを渡す
-  // 第二引数にはfetcherを渡す
-  // ここではSuspenseを使うため、useSuspenseQueryとしている
-  const { isLoading, error, data } = useSuspenseQuery<Album[]>({ queryKey: ['albums'], queryFn: fetchAlubums, });
+  const buttonStyle = {
+    padding: '12px',
+    fontSize: '16px',
+    border: 'none',
+    opacity: isPending ? 0.5 : 1,
+  }
+  const albumButtonStyle = {
+    ...buttonStyle, // ここでスプレッド構文でbuttonStyleを全て展開している
+    backgroundColor: selectedTab === 'album' ? 'royalblue' : 'white',
+    color: selectedTab === 'album' ? 'white' : 'black',
+  }
+  const todoButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: selectedTab === 'todo' ? 'royalblue' : 'white',
+    color: selectedTab === 'todo' ? 'white' : 'black',
+  }
 
-  // if (error) return <p>エラーが発生しました</p>;
-  // if (isLoading) return <p>ローディング中です...</p>;
-  
+  const onClickTabButton = (tab: Tabs) => {
+    startTransition(() => {
+      setSelectedTab(tab);
+    });
+  }
   return (
-    <div>
-      <p>React Query</p>
-      {data?.map((album) => <p key={album.id}>{album.title}</p>)}
+    <div style={{ display: 'flex', padding: '16px' }}>
+      <Sidebar />
+      <div style={{ flexGrow: 1 }}>
+        <button style={todoButtonStyle}  onClick={() => onClickTabButton('todo')}>Todo</button>
+        <button style={albumButtonStyle} onClick={() => onClickTabButton('album')}>Album</button>
+
+        <ErrorBoundary fallback={<p>Todo or AlbumListエラーが発生しました</p>}>
+          <Suspense fallback={<p>Todo or AlbumListローディング中だよ〜</p>}>
+            {selectedTab === 'album' ? <AlbumList /> : <TodoList />}
+          </Suspense>
+        </ErrorBoundary>
+      </div>
     </div>
   )
 }
